@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>PC Remote</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:#0e0f13;color:#eaeaea}
+    .wrap{padding:14px;max-width:720px;margin:0 auto}
+    h1{font-size:18px;margin:8px 0 12px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .btn{flex:1 1 auto;padding:12px;border-radius:12px;background:#1f232b;border:1px solid #2d3440;text-align:center;cursor:pointer;user-select:none}
+    .btn:active{transform:scale(.98)}
+    .input{width:100%;padding:12px;border-radius:12px;border:1px solid #2d3440;background:#11151b;color:#eaeaea}
+    .kbd{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+    .sw{display:flex;align-items:center;gap:8px;margin:6px 0}
+    .small{font-size:12px;opacity:.8}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PC Remote — <span id="title">@FROGOV_BOT_PC</span></h1>
+
+  <!-- текстовая синхронизация -->
+  <div class="sw">
+    <input id="focusToggle" type="checkbox" checked />
+    <label for="focusToggle">Клавиатура всегда открыта</label>
+  </div>
+  <input id="textInput" class="input" placeholder="Печатай здесь — текст попадёт на ПК" autocomplete="on" />
+  <div class="row">
+    <div class="btn" id="sendToClipboard">В буфер ПК</div>
+    <div class="btn" id="paste">Вставить (Ctrl+V)</div>
+    <div class="btn" id="getClipboard">Считать буфер</div>
+  </div>
+
+  <!-- клавиши -->
+  <div class="kbd">
+    <label><input type="checkbox" id="win"> WIN</label>
+    <label><input type="checkbox" id="ctrl"> CTRL</label>
+    <label><input type="checkbox" id="alt"> ALT</label>
+    <label><input type="checkbox" id="shift"> SHIFT</label>
+  </div>
+  <div class="row">
+    <input id="keyField" class="input" placeholder="Клавиша: A / F5 / Enter / Tab / Esc ..." />
+    <div class="btn" id="sendKey" style="flex:0 0 120px">Отправить</div>
+  </div>
+
+  <!-- сенсорные кнопки -->
+  <div class="grid">
+    <div class="btn" data-k="esc">Esc</div>
+    <div class="btn" data-k="tab">Tab</div>
+    <div class="btn" data-k="enter">Enter</div>
+    <div class="btn" data-k="left">◀</div>
+    <div class="btn" data-k="down">▼</div>
+    <div class="btn" data-k="right">▶</div>
+    <div class="btn" data-k="up">▲</div>
+    <div class="btn" data-k="backspace">Backspace</div>
+    <div class="btn" id="mute">🔇 Mute</div>
+  </div>
+
+  <p class="small">Поддержка F1…F12: в поле «Клавиша» введи F1, F2, …</p>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand(); // макс. высота
+document.getElementById('title').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : '';
+
+const focusToggle = document.getElementById('focusToggle');
+const textInput   = document.getElementById('textInput');
+const keyField    = document.getElementById('keyField');
+
+const sendData = (type, payload={}) => {
+  tg.sendData(JSON.stringify({type, payload}));
+};
+
+// поддержка «клавиатура всегда открыта»
+const ensureFocus = () => { if (focusToggle.checked) setTimeout(()=>textInput.focus(), 50); };
+ensureFocus();
+focusToggle.addEventListener('change', ensureFocus);
+document.addEventListener('visibilitychange', ensureFocus);
+
+// печать: по Enter — вставка; по вводу — ничего не шлём (чтобы не спамить)
+textInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ sendData('set_clipboard',{text:textInput.value}); sendData('paste'); e.preventDefault(); }
+});
+
+// кнопки буфера
+document.getElementById('sendToClipboard').onclick = ()=> sendData('set_clipboard',{text:textInput.value});
+document.getElementById('paste').onclick = ()=> sendData('paste');
+document.getElementById('getClipboard').onclick = ()=> sendData('get_clipboard');
+
+// отправка клавиш
+const mod = id => document.getElementById(id).checked;
+function sendKey(key){
+  sendData('send_keys', { key,
+    win: mod('win'), ctrl: mod('ctrl'), alt: mod('alt'), shift: mod('shift')
+  });
+  ensureFocus();
+}
+document.getElementById('sendKey').onclick = ()=>{
+  const raw = keyField.value.trim().toLowerCase();
+  if(!raw) return;
+  sendKey(raw);
+};
+
+// сенсорные кнопки
+document.querySelectorAll('.grid .btn[data-k]').forEach(b=>{
+  b.onclick = ()=> sendKey(b.getAttribute('data-k'));
+});
+document.getElementById('mute').onclick = ()=> sendData('toggle_mute');
+</script>
+</body>
+</html>
