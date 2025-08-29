@@ -16,58 +16,65 @@
     .kbd{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
     .sw{display:flex;align-items:center;gap:8px;margin:6px 0}
     .small{font-size:12px;opacity:.8}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>PC Remote — <span id="title">@frogovbot</span></h1>
+  <h1>PC Remote</h1>
 
+  <!-- Медиа и громкость -->
   <div class="row">
-    <div class="btn" id="mute">🔇 Mute</div>
-    <div class="btn" id="ping">Ping</div>
+    <div class="btn" id="mediaPrev">⏮</div>
+    <div class="btn" id="mediaPlay">⏯</div>
+    <div class="btn" id="mediaNext">⏭</div>
+  </div>
+  <div class="row">
+    <div class="btn" id="volDown">🔉 −</div>
+    <div class="btn" id="mute">🔇</div>
+    <div class="btn" id="volUp">🔊 +</div>
   </div>
 
+  <!-- Поле ввода -->
   <div class="sw">
-    <input id="focusToggle" type="checkbox" checked />
+    <input id="focusToggle" type="checkbox" />
     <label for="focusToggle">Клавиатура всегда открыта</label>
   </div>
-  <div class="sw">
-    <input id="liveToggle" type="checkbox" checked />
-    <label for="liveToggle">Режим живого набора</label>
-  </div>
-
-  <input id="textInput" class="input" placeholder="Печатай здесь — текст сразу попадёт на ПК" autocomplete="on" />
-
+  <input id="textInput" class="input" placeholder="Напечатай текст здесь" autocomplete="on" />
   <div class="row">
-    <div class="btn" id="sendToClipboard">В буфер ПК</div>
+    <div class="btn" id="sendText">Отправить</div>
     <div class="btn" id="paste">Вставить (Ctrl+V)</div>
     <div class="btn" id="getClipboard">Считать буфер</div>
   </div>
 
+  <!-- Модификаторы -->
   <div class="kbd">
     <label><input type="checkbox" id="win"> WIN</label>
     <label><input type="checkbox" id="ctrl"> CTRL</label>
     <label><input type="checkbox" id="alt"> ALT</label>
     <label><input type="checkbox" id="shift"> SHIFT</label>
   </div>
-  <div class="row">
-    <input id="keyField" class="input" placeholder="Клавиша: A / F5 / Enter / Tab / Esc ..." />
-    <div class="btn" id="sendKey" style="flex:0 0 120px">Отправить</div>
-  </div>
 
-  <div class="grid">
-    <div class="btn" data-k="esc">Esc</div>
-    <div class="btn" data-k="tab">Tab</div>
-    <div class="btn" data-k="enter">Enter</div>
+  <!-- Стрелки как на клавиатуре (инвертированная Т) -->
+  <div class="grid3" style="max-width:360px;margin:0 auto 6px">
+    <div></div>
+    <div class="btn" data-k="up">▲</div>
+    <div></div>
     <div class="btn" data-k="left">◀</div>
     <div class="btn" data-k="down">▼</div>
     <div class="btn" data-k="right">▶</div>
-    <div class="btn" data-k="up">▲</div>
+  </div>
+
+  <!-- Доп. клавиши -->
+  <div class="grid4">
+    <div class="btn" data-k="esc">Esc</div>
+    <div class="btn" data-k="tab">Tab</div>
+    <div class="btn" data-k="enter">Enter</div>
     <div class="btn" data-k="backspace">Backspace</div>
   </div>
 
-  <p class="small">F1…F12 пиши как F1, F2, ... • В живом режиме удаление символов шлёт Backspace на ПК.</p>
+  <p class="small">F1…F12 пиши как F1, F2, ... • Enter в поле ввода отправит текст в буфер и выполнит «Вставить».</p>
 </div>
 
 <script>
@@ -75,48 +82,33 @@ const tg = window.Telegram.WebApp; tg.expand();
 const el = id => document.getElementById(id);
 const send = (type, payload={}) => tg.sendData(JSON.stringify({type, payload}));
 
-el('title').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : el('title').textContent;
-
-const focusToggle = el('focusToggle'), textInput = el('textInput'), liveToggle = el('liveToggle');
+// фокус
+const focusToggle = el('focusToggle'), textInput = el('textInput');
 const ensureFocus = ()=>{ if(focusToggle.checked) setTimeout(()=>textInput.focus(), 50); };
-ensureFocus(); document.addEventListener('visibilitychange', ensureFocus); focusToggle.addEventListener('change', ensureFocus);
+document.addEventListener('visibilitychange', ensureFocus); focusToggle.addEventListener('change', ensureFocus);
 
-// живой набор: отправляем дельту (добавили — type_text, удалили — backspace x N)
-let lastValue = "";
-textInput.addEventListener('input', ()=>{
-  if(!liveToggle.checked) return;
-  const cur = textInput.value;
-  // найдём общий префикс
-  let i=0; while(i<lastValue.length && i<cur.length && lastValue[i]===cur[i]) i++;
-  if(cur.length > lastValue.length){ // добавили
-    const add = cur.slice(i);
-    if(add) send('type_text', {text: add});
-  }else if(cur.length < lastValue.length){ // удалили
-    const n = lastValue.length - cur.length;
-    if(n>0) send('send_keys', {key:'backspace', repeat:n});
-  }
-  lastValue = cur;
-});
-
-// Enter = вставка
+// отправка текста
+el('sendText').onclick = ()=> { const t = textInput.value; if(t) send('type_text', {text:t}); };
 textInput.addEventListener('keydown', e=>{
   if(e.key==='Enter'){ send('set_clipboard',{text:textInput.value}); send('paste'); e.preventDefault(); }
 });
 
-// буфер
-el('sendToClipboard').onclick = ()=> send('set_clipboard',{text:textInput.value});
-el('paste').onclick          = ()=> send('paste');
-el('getClipboard').onclick   = ()=> send('get_clipboard');
+// буфер / вставка
+el('paste').onclick        = ()=> send('paste');
+el('getClipboard').onclick = ()=> send('get_clipboard');
 
 // клавиши
 const mod = id => el(id).checked;
 function sendKey(k, repeat=1){ send('send_keys',{key:k, win:mod('win'), ctrl:mod('ctrl'), alt:mod('alt'), shift:mod('shift'), repeat}); ensureFocus(); }
-el('sendKey').onclick = ()=>{ const raw = el('keyField').value.trim().toLowerCase(); if(raw) sendKey(raw); };
-document.querySelectorAll('.grid .btn[data-k]').forEach(b=> b.onclick = ()=> sendKey(b.getAttribute('data-k')) );
+document.querySelectorAll('[data-k]').forEach(b=> b.onclick = ()=> sendKey(b.getAttribute('data-k')) );
 
-// mute + ping
-el('mute').onclick = ()=> send('toggle_mute');
-el('ping').onclick = ()=> send('ping');
+// медиа и звук
+el('mediaPrev').onclick = ()=> send('media',  {action:'prev'});
+el('mediaPlay').onclick = ()=> send('media',  {action:'playpause'});
+el('mediaNext').onclick = ()=> send('media',  {action:'next'});
+el('mute').onclick      = ()=> send('toggle_mute');
+el('volDown').onclick   = ()=> send('volume', {action:'down', repeat:2});
+el('volUp').onclick     = ()=> send('volume', {action:'up',   repeat:2});
 </script>
 </body>
 </html>
