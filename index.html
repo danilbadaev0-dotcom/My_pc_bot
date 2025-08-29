@@ -8,73 +8,81 @@
   <style>
     body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:#0e0f13;color:#eaeaea}
     .wrap{padding:14px;max-width:720px;margin:0 auto}
-    h1{font-size:18px;margin:8px 0 12px}
+    h2{font-size:16px;margin:14px 0 8px}
     .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
     .btn{flex:1 1 auto;padding:12px;border-radius:12px;background:#1f232b;border:1px solid #2d3440;text-align:center;cursor:pointer;user-select:none}
     .btn:active{transform:scale(.98)}
     .input{width:100%;padding:12px;border-radius:12px;border:1px solid #2d3440;background:#11151b;color:#eaeaea}
-    .kbd{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
-    .sw{display:flex;align-items:center;gap:8px;margin:6px 0}
-    .small{font-size:12px;opacity:.8}
+    .kbd{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .sw{display:flex;align-items:center;gap:8px;margin:6px 0}
+    .section{padding:10px;border:1px solid #2d3440;border-radius:12px;background:#0f1319;margin-bottom:12px}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>PC Remote</h1>
-
   <!-- Медиа и громкость -->
-  <div class="row">
-    <div class="btn" id="mediaPrev">⏮</div>
-    <div class="btn" id="mediaPlay">⏯</div>
-    <div class="btn" id="mediaNext">⏭</div>
-  </div>
-  <div class="row">
-    <div class="btn" id="volDown">🔉 −</div>
-    <div class="btn" id="mute">🔇</div>
-    <div class="btn" id="volUp">🔊 +</div>
-  </div>
-
-  <!-- Поле ввода -->
-  <div class="sw">
-    <input id="focusToggle" type="checkbox" />
-    <label for="focusToggle">Клавиатура всегда открыта</label>
-  </div>
-  <input id="textInput" class="input" placeholder="Напечатай текст здесь" autocomplete="on" />
-  <div class="row">
-    <div class="btn" id="sendText">Отправить</div>
-    <div class="btn" id="paste">Вставить (Ctrl+V)</div>
-    <div class="btn" id="getClipboard">Считать буфер</div>
+  <div class="section">
+    <h2>Медиа</h2>
+    <div class="row">
+      <div class="btn" id="mediaPrev">⏮</div>
+      <div class="btn" id="mediaPlay">⏯</div>
+      <div class="btn" id="mediaNext">⏭</div>
+    </div>
+    <div class="row">
+      <div class="btn" id="volDown">🔉 −</div>
+      <div class="btn" id="mute">🔇</div>
+      <div class="btn" id="volUp">🔊 +</div>
+    </div>
   </div>
 
-  <!-- Модификаторы -->
-  <div class="kbd">
-    <label><input type="checkbox" id="win"> WIN</label>
-    <label><input type="checkbox" id="ctrl"> CTRL</label>
-    <label><input type="checkbox" id="alt"> ALT</label>
-    <label><input type="checkbox" id="shift"> SHIFT</label>
+  <!-- Текст -> Отправить -->
+  <div class="section">
+    <h2>Текст</h2>
+    <div class="sw">
+      <input id="focusToggle" type="checkbox" />
+      <label for="focusToggle">Клавиатура всегда открыта</label>
+    </div>
+    <input id="textInput" class="input" placeholder="Напечатай текст здесь" autocomplete="on" />
+    <div class="row">
+      <div class="btn" id="sendText">Отправить</div>
+      <div class="btn" id="paste">Вставить (Ctrl+V)</div>
+      <div class="btn" id="getClipboard">Считать буфер</div>
+    </div>
   </div>
 
-  <!-- Стрелки как на клавиатуре (инвертированная Т) -->
-  <div class="grid3" style="max-width:360px;margin:0 auto 6px">
-    <div></div>
-    <div class="btn" data-k="up">▲</div>
-    <div></div>
-    <div class="btn" data-k="left">◀</div>
-    <div class="btn" data-k="down">▼</div>
-    <div class="btn" data-k="right">▶</div>
-  </div>
+  <!-- Горячая клавиша -->
+  <div class="section">
+    <h2>Горячая клавиша</h2>
+    <div class="kbd">
+      <label><input type="checkbox" id="win"> WIN</label>
+      <label><input type="checkbox" id="ctrl"> CTRL</label>
+      <label><input type="checkbox" id="alt"> ALT</label>
+      <label><input type="checkbox" id="shift"> SHIFT</label>
+    </div>
+    <div class="row">
+      <input id="keyField" class="input" placeholder="Напр.: R, F5, Enter, Tab, Esc..." />
+      <div class="btn" id="sendKey" style="flex:0 0 140px">Выполнить</div>
+    </div>
 
-  <!-- Доп. клавиши -->
-  <div class="grid4">
-    <div class="btn" data-k="esc">Esc</div>
-    <div class="btn" data-k="tab">Tab</div>
-    <div class="btn" data-k="enter">Enter</div>
-    <div class="btn" data-k="backspace">Backspace</div>
-  </div>
+    <!-- Стрелки как на клавиатуре -->
+    <div class="grid3" style="max-width:360px;margin:0 auto 6px">
+      <div></div>
+      <div class="btn" data-k="up">▲</div>
+      <div></div>
+      <div class="btn" data-k="left">◀</div>
+      <div class="btn" data-k="down">▼</div>
+      <div class="btn" data-k="right">▶</div>
+    </div>
 
-  <p class="small">F1…F12 пиши как F1, F2, ... • Enter в поле ввода отправит текст в буфер и выполнит «Вставить».</p>
+    <div class="grid4">
+      <div class="btn" data-k="esc">Esc</div>
+      <div class="btn" data-k="tab">Tab</div>
+      <div class="btn" data-k="enter">Enter</div>
+      <div class="btn" data-k="backspace">Backspace</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -85,24 +93,32 @@ const send = (type, payload={}) => tg.sendData(JSON.stringify({type, payload}));
 // фокус
 const focusToggle = el('focusToggle'), textInput = el('textInput');
 const ensureFocus = ()=>{ if(focusToggle.checked) setTimeout(()=>textInput.focus(), 50); };
-document.addEventListener('visibilitychange', ensureFocus); focusToggle.addEventListener('change', ensureFocus);
+document.addEventListener('visibilitychange', ensureFocus);
+focusToggle.addEventListener('change', ensureFocus);
 
-// отправка текста
+// Текст
 el('sendText').onclick = ()=> { const t = textInput.value; if(t) send('type_text', {text:t}); };
 textInput.addEventListener('keydown', e=>{
   if(e.key==='Enter'){ send('set_clipboard',{text:textInput.value}); send('paste'); e.preventDefault(); }
 });
-
-// буфер / вставка
 el('paste').onclick        = ()=> send('paste');
 el('getClipboard').onclick = ()=> send('get_clipboard');
 
-// клавиши
+// Горячая клавиша
 const mod = id => el(id).checked;
-function sendKey(k, repeat=1){ send('send_keys',{key:k, win:mod('win'), ctrl:mod('ctrl'), alt:mod('alt'), shift:mod('shift'), repeat}); ensureFocus(); }
+function sendKey(k, repeat=1){
+  send('send_keys',{
+    key:k.toLowerCase(), win:mod('win'), ctrl:mod('ctrl'), alt:mod('alt'), shift:mod('shift'), repeat
+  });
+  ensureFocus();
+}
+el('sendKey').onclick = ()=>{
+  const raw = el('keyField').value.trim();
+  if(raw) sendKey(raw, 1);
+};
 document.querySelectorAll('[data-k]').forEach(b=> b.onclick = ()=> sendKey(b.getAttribute('data-k')) );
 
-// медиа и звук
+// Медиа/звук
 el('mediaPrev').onclick = ()=> send('media',  {action:'prev'});
 el('mediaPlay').onclick = ()=> send('media',  {action:'playpause'});
 el('mediaNext').onclick = ()=> send('media',  {action:'next'});
