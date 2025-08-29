@@ -21,21 +21,25 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>PC Remote — <span id="title">@FROGOV_BOT_PC</span></h1>
+  <h1>PC Remote — <span id="title">@pc_control_bot</span></h1>
 
-  <!-- текстовая синхронизация -->
+  <div class="row">
+    <div class="btn" id="ping">Ping</div>
+    <div class="btn" id="mute">🔇 Mute</div>
+  </div>
+
   <div class="sw">
     <input id="focusToggle" type="checkbox" checked />
     <label for="focusToggle">Клавиатура всегда открыта</label>
   </div>
   <input id="textInput" class="input" placeholder="Печатай здесь — текст попадёт на ПК" autocomplete="on" />
+
   <div class="row">
     <div class="btn" id="sendToClipboard">В буфер ПК</div>
     <div class="btn" id="paste">Вставить (Ctrl+V)</div>
     <div class="btn" id="getClipboard">Считать буфер</div>
   </div>
 
-  <!-- клавиши -->
   <div class="kbd">
     <label><input type="checkbox" id="win"> WIN</label>
     <label><input type="checkbox" id="ctrl"> CTRL</label>
@@ -47,7 +51,6 @@
     <div class="btn" id="sendKey" style="flex:0 0 120px">Отправить</div>
   </div>
 
-  <!-- сенсорные кнопки -->
   <div class="grid">
     <div class="btn" data-k="esc">Esc</div>
     <div class="btn" data-k="tab">Tab</div>
@@ -57,60 +60,47 @@
     <div class="btn" data-k="right">▶</div>
     <div class="btn" data-k="up">▲</div>
     <div class="btn" data-k="backspace">Backspace</div>
-    <div class="btn" id="mute">🔇 Mute</div>
   </div>
 
-  <p class="small">Поддержка F1…F12: в поле «Клавиша» введи F1, F2, …</p>
+  <p class="small">F1…F12 пиши как F1, F2, ...</p>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
-tg.expand(); // макс. высота
-document.getElementById('title').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : '';
+tg.expand();
 
-const focusToggle = document.getElementById('focusToggle');
-const textInput   = document.getElementById('textInput');
-const keyField    = document.getElementById('keyField');
+const el = id => document.getElementById(id);
+const send = (type, payload={}) => tg.sendData(JSON.stringify({type, payload}));
 
-const sendData = (type, payload={}) => {
-  tg.sendData(JSON.stringify({type, payload}));
-};
+// заголовок
+el('title').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : el('title').textContent;
 
-// поддержка «клавиатура всегда открыта»
-const ensureFocus = () => { if (focusToggle.checked) setTimeout(()=>textInput.focus(), 50); };
+// держать фокус
+const focusToggle = el('focusToggle'), textInput = el('textInput');
+const ensureFocus = ()=>{ if(focusToggle.checked) setTimeout(()=>textInput.focus(),50); };
 ensureFocus();
-focusToggle.addEventListener('change', ensureFocus);
 document.addEventListener('visibilitychange', ensureFocus);
+focusToggle.addEventListener('change', ensureFocus);
 
-// печать: по Enter — вставка; по вводу — ничего не шлём (чтобы не спамить)
+// печать: Enter = вставка
 textInput.addEventListener('keydown', e=>{
-  if(e.key==='Enter'){ sendData('set_clipboard',{text:textInput.value}); sendData('paste'); e.preventDefault(); }
+  if(e.key==='Enter'){ send('set_clipboard',{text:textInput.value}); send('paste'); e.preventDefault(); }
 });
 
-// кнопки буфера
-document.getElementById('sendToClipboard').onclick = ()=> sendData('set_clipboard',{text:textInput.value});
-document.getElementById('paste').onclick = ()=> sendData('paste');
-document.getElementById('getClipboard').onclick = ()=> sendData('get_clipboard');
+// буфер
+el('sendToClipboard').onclick = ()=> send('set_clipboard',{text:textInput.value});
+el('paste').onclick          = ()=> send('paste');
+el('getClipboard').onclick   = ()=> send('get_clipboard');
 
-// отправка клавиш
-const mod = id => document.getElementById(id).checked;
-function sendKey(key){
-  sendData('send_keys', { key,
-    win: mod('win'), ctrl: mod('ctrl'), alt: mod('alt'), shift: mod('shift')
-  });
-  ensureFocus();
-}
-document.getElementById('sendKey').onclick = ()=>{
-  const raw = keyField.value.trim().toLowerCase();
-  if(!raw) return;
-  sendKey(raw);
-};
+// клавиши
+const mod = id => el(id).checked;
+function sendKey(k){ send('send_keys',{key:k, win:mod('win'), ctrl:mod('ctrl'), alt:mod('alt'), shift:mod('shift')}); ensureFocus(); }
+el('sendKey').onclick = ()=>{ const raw = el('keyField').value.trim().toLowerCase(); if(raw) sendKey(raw); };
+document.querySelectorAll('.grid .btn[data-k]').forEach(b=> b.onclick = ()=> sendKey(b.getAttribute('data-k')) );
 
-// сенсорные кнопки
-document.querySelectorAll('.grid .btn[data-k]').forEach(b=>{
-  b.onclick = ()=> sendKey(b.getAttribute('data-k'));
-});
-document.getElementById('mute').onclick = ()=> sendData('toggle_mute');
+// mute + ping
+el('mute').onclick = ()=> send('toggle_mute');
+el('ping').onclick = ()=> send('ping');
 </script>
 </body>
 </html>
