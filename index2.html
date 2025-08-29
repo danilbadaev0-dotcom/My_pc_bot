@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WebApp Ping Test</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<body style="font-family:system-ui">
+  <h3>WebApp Ping Test</h3>
+  <pre id="info" style="white-space:pre-wrap;background:#eee;padding:8px"></pre>
+  <button id="ping">Send ping</button>
+  <script>
+    const tg = window.Telegram?.WebApp;
+    const info = document.getElementById('info');
+    info.textContent =
+      'tg exists: ' + !!tg + '\n' +
+      'platform: ' + (tg?.platform||'') + '\n' +
+      'initData length: ' + (tg?.initData?.length||0);
+
+    document.getElementById('ping').onclick = ()=>{
+      try {
+        tg?.sendData(JSON.stringify({type:'ping', payload:{ts:Date.now()}}));
+        alert('sent'); // чтобы точно видеть клик
+      } catch(e) {
+        alert('sendData error: '+e);
+      }
+    };
+  </script>
+</body>
