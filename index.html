@@ -1,125 +1,136 @@
 <!doctype html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
-  <title>PC Remote</title>
+  <meta charset="utf-8">
+  <title>PC Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:#0e0f13;color:#eaeaea}
-    .wrap{padding:14px;max-width:720px;margin:0 auto}
-    h2{font-size:16px;margin:14px 0 8px}
-    .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-    .btn{flex:1 1 auto;padding:12px;border-radius:12px;background:#1f232b;border:1px solid #2d3440;text-align:center;cursor:pointer;user-select:none}
-    .btn:active{transform:scale(.98)}
-    .input{width:100%;padding:12px;border-radius:12px;border:1px solid #2d3440;background:#11151b;color:#eaeaea}
-    .kbd{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-    .sw{display:flex;align-items:center;gap:8px;margin:6px 0}
-    .section{padding:10px;border:1px solid #2d3440;border-radius:12px;background:#0f1319;margin-bottom:12px}
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
-  <div class="section">
-    <h2>Медиа</h2>
-    <div class="row">
-      <div class="btn" id="mediaPrev">⏮</div>
-      <div class="btn" id="mediaPlay">⏯</div>
-      <div class="btn" id="mediaNext">⏭</div>
-    </div>
-    <div class="row">
-      <div class="btn" id="volDown">🔉 −</div>
-      <div class="btn" id="mute">🔇</div>
-      <div class="btn" id="volUp">🔊 +</div>
-    </div>
+  <div class="wrap">
+    <h2>PC Control</h2>
+
+    <section class="row">
+      <label>Текст → на ПК</label>
+      <div class="inline">
+        <input id="txt" placeholder="Напечатать на ПК…" autofocus>
+        <button id="btnSend">Отправить</button>
+      </div>
+    </section>
+
+    <section class="row">
+      <label>Комбинация клавиш</label>
+      <div class="inline">
+        <label><input type="checkbox" id="mCtrl">CTRL</label>
+        <label><input type="checkbox" id="mAlt">ALT</label>
+        <label><input type="checkbox" id="mShift">SHIFT</label>
+        <label><input type="checkbox" id="mWin">WIN</label>
+        <input id="key" placeholder="Клавиша (например, R)">
+        <button id="btnHotkey">Жмак</button>
+      </div>
+    </section>
+
+    <section class="row">
+      <label>Медиа</label>
+      <div class="inline">
+        <button data-act="mute">Mute</button>
+        <button data-act="voldown">Vol−</button>
+        <button data-act="volup">Vol+</button>
+        <button data-act="prev">⏮</button>
+        <button data-act="playpause">⏯</button>
+        <button data-act="next">⏭</button>
+      </div>
+    </section>
+
+    <section class="row">
+      <label>Экран ПК (требуется HTTPS-доступ к агенту)</label>
+      <img id="screen" alt="screenshot" style="width:100%;max-width:900px;border:1px solid #333;border-radius:8px">
+      <div class="inline">
+        <button id="btnRefresh">Обновить</button>
+        <button id="btnApps">Список приложений</button>
+      </div>
+      <pre id="apps" class="pre"></pre>
+    </section>
   </div>
 
-  <div class="section">
-    <h2>Текст</h2>
-    <div class="sw">
-      <input id="focusToggle" type="checkbox" />
-      <label for="focusToggle">Клавиатура всегда открыта</label>
-    </div>
-    <input id="textInput" class="input" placeholder="Напечатай текст здесь" autocomplete="on" />
-    <div class="row">
-      <div class="btn" id="sendText">Отправить</div>
-      <div class="btn" id="paste">Вставить (Ctrl+V)</div>
-      <div class="btn" id="getClipboard">Считать буфер</div>
-    </div>
-  </div>
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
 
-  <div class="section">
-    <h2>Горячая клавиша</h2>
-    <div class="kbd">
-      <label><input type="checkbox" id="win"> WIN</label>
-      <label><input type="checkbox" id="ctrl"> CTRL</label>
-      <label><input type="checkbox" id="alt"> ALT</label>
-      <label><input type="checkbox" id="shift"> SHIFT</label>
-    </div>
-    <div class="row">
-      <input id="keyField" class="input" placeholder="Напр.: R, F5, Enter, Tab, Esc..." />
-      <div class="btn" id="sendKey" style="flex:0 0 140px">Выполнить</div>
-    </div>
-    <div class="grid3" style="max-width:360px;margin:0 auto 6px">
-      <div></div>
-      <div class="btn" data-k="up">▲</div>
-      <div></div>
-      <div class="btn" data-k="left">◀</div>
-      <div class="btn" data-k="down">▼</div>
-      <div class="btn" data-k="right">▶</div>
-    </div>
-    <div class="grid4">
-      <div class="btn" data-k="esc">Esc</div>
-      <div class="btn" data-k="tab">Tab</div>
-      <div class="btn" data-k="enter">Enter</div>
-      <div class="btn" data-k="backspace">Backspace</div>
-    </div>
-  </div>
-</div>
+    // Укажи публичный https хост агента (если есть). Иначе оставь пусто — картинка не будет подтягиваться.
+    const PUBLIC_AGENT_BASE = ""; // например: "https://your-subdomain.trycloudflare.com"
 
-<script>
-const tg = window.Telegram.WebApp; tg.expand();
-const el = id => document.getElementById(id);
-const send = (type, payload={}) => tg.sendData(JSON.stringify({type, payload}));
+    function toast(msg){ try{ tg.showPopup({message: msg}); }catch(e){ alert(msg);} }
 
-// Фокус
-const focusToggle = el('focusToggle'), textInput = el('textInput');
-const ensureFocus = ()=>{ if(focusToggle.checked) setTimeout(()=>textInput.focus(), 50); };
-document.addEventListener('visibilitychange', ensureFocus);
-focusToggle.addEventListener('change', ensureFocus);
+    function sendToBot(payload){
+      tg.sendData(JSON.stringify(payload));
+      toast("Отправлено");
+    }
 
-// Текст
-el('sendText').onclick = ()=> { const t = textInput.value; if(t) send('type_text', {text:t}); };
-textInput.addEventListener('keydown', e=>{
-  if(e.key==='Enter'){ send('set_clipboard',{text:textInput.value}); send('paste'); e.preventDefault(); }
-});
-el('paste').onclick        = ()=> send('paste');
-el('getClipboard').onclick = ()=> send('get_clipboard');
+    // текст
+    document.getElementById('btnSend').onclick = () => {
+      const txt = document.getElementById('txt').value || "";
+      if (!txt.trim()) return toast("Пусто");
+      sendToBot({type:'type_text', text: txt});
+      document.getElementById('txt').value = "";
+    };
 
-// Горячие клавиши
-const mod = id => el(id).checked;
-function sendKey(k, repeat=1){
-  send('send_keys',{
-    key:String(k).toLowerCase(), win:mod('win'), ctrl:mod('ctrl'),
-    alt:mod('alt'), shift:mod('shift'), repeat
-  });
-  ensureFocus();
-}
-el('sendKey').onclick = ()=>{
-  const raw = el('keyField').value.trim();
-  if(raw) sendKey(raw, 1);
-};
-document.querySelectorAll('[data-k]').forEach(b=> b.onclick = ()=> sendKey(b.getAttribute('data-k')) );
+    // хоткей
+    document.getElementById('btnHotkey').onclick = () => {
+      const mods = [];
+      if (document.getElementById('mCtrl').checked) mods.push('ctrl');
+      if (document.getElementById('mAlt').checked) mods.push('alt');
+      if (document.getElementById('mShift').checked) mods.push('shift');
+      if (document.getElementById('mWin').checked) mods.push('win');
+      const key = (document.getElementById('key').value || "").trim();
+      if (!key) return toast("Укажи клавишу");
+      sendToBot({type:'hotkey', mods, key});
+    };
 
-// Медиа / звук
-el('mediaPrev').onclick = ()=> send('media',  {action:'prev'});
-el('mediaPlay').onclick = ()=> send('media',  {action:'playpause'});
-el('mediaNext').onclick = ()=> send('media',  {action:'next'});
-el('mute').onclick      = ()=> send('toggle_mute');
-el('volDown').onclick   = ()=> send('volume', {action:'down', repeat:2});
-el('volUp').onclick     = ()=> send('volume', {action:'up',   repeat:2});
-</script>
+    // медиа
+    document.querySelectorAll('[data-act]').forEach(btn=>{
+      btn.onclick = ()=> sendToBot({type:'media', action: btn.dataset.act});
+    });
+
+    // скрин
+    function refreshScreen(){
+      const img = document.getElementById('screen');
+      if (!PUBLIC_AGENT_BASE){
+        img.src = "";
+        return;
+      }
+      img.src = PUBLIC_AGENT_BASE + "/screenshot.jpg?t=" + Date.now();
+    }
+    document.getElementById('btnRefresh').onclick = refreshScreen;
+    refreshScreen(); setInterval(refreshScreen, 4000);
+
+    // список приложений (2 режима)
+    document.getElementById('btnApps').onclick = async ()=>{
+      const pre = document.getElementById('apps');
+      pre.textContent = "Загрузка...";
+      if (PUBLIC_AGENT_BASE){
+        // прямой запрос к агенту
+        try{
+          const r = await fetch(PUBLIC_AGENT_BASE + "/rpc", {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({secret:"FrogovWelder", cmd:"apps"})
+          });
+          const j = await r.json();
+          if (!j.ok) throw new Error(j.error);
+          const arr = j.result.slice(0, 200);
+          pre.textContent = arr.map(x=>`• ${x.name}${x.version? " ("+x.version+")":""} [${x.source}]`).join("\n");
+        }catch(e){
+          pre.textContent = "Ошибка: " + e.message;
+        }
+      }else{
+        // через бота (в чат уйдёт только краткая инфа), внутри WebApp список не покажем без публичного HTTPS
+        sendToBot({type:'apps'});
+        pre.textContent = "Запрошено через бота…";
+      }
+    };
+  </script>
 </body>
 </html>
